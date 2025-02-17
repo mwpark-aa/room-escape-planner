@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Chip, TextField, Typography} from "@mui/material";
+import {Box, Button, Chip, Paper, Stack, TextField, Typography} from "@mui/material";
 import Autocomplete from '@mui/material/Autocomplete';
 
 const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
@@ -8,12 +8,6 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     const [preferredTime, setPreferredTime] = useState('');
     const [preferredTimes, setPreferredTimes] = useState([]);
 
-    const handleAddTime = () => {
-        if (preferredTime && !preferredTimes.includes(preferredTime)) {
-            setPreferredTimes([...preferredTimes, preferredTime]);
-            setPreferredTime('');
-        }
-    };
     const [error, setError] = useState(false);
 
     const validateTimeFormat = (time) => {
@@ -76,75 +70,84 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     };
 
     return (
-        <Box sx={{
-            mt: 4,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 2,
-            border: '1px solid #ccc',
-            padding: 2,
-            borderRadius: 2
-        }}>
-            <Typography variant="h5" component="h2" gutterBottom>
-                정보 #{index + 1}
+        <Paper elevation={3} sx={{p: 3, borderRadius: 3}}>
+            <Typography variant="h6" component="h2" gutterBottom>
+                🎯 #{index + 1}
             </Typography>
 
-            <Autocomplete
-                freeSolo
-                options={themeInfo}
-                getOptionLabel={(option) => {
-                    if (typeof option === 'string') {
-                        return option;
+            <Stack spacing={2}>
+                <Autocomplete
+                    freeSolo
+                    options={themeInfo}
+                    getOptionLabel={(option) =>
+                        typeof option === "string" ? option : option.name || ""
                     }
-                    return option.name || '';
-                }}
-                groupBy={(option) => option.place}
-                value={themeInfo.find(theme => theme.name === roomName) || null}
-                onChange={handleThemeChange}
-                filterOptions={(options, { inputValue }) => options.filter(option => option.name.includes(inputValue)).slice(0, 100)}
-                renderInput={(params) =>
-                    <TextField {...params} label="테마 이름" variant="outlined" />}
-                ListboxProps={{
-                    style: { maxHeight: '200px' }
-                }}
-            />
+                    groupBy={(option) => option.place}
+                    value={themeInfo.find((theme) => theme.name === roomName) || null}
+                    onChange={handleThemeChange}
+                    filterOptions={(options, {inputValue}) =>
+                        options
+                            .filter((option) => option.name.includes(inputValue))
+                            .slice(0, 100)
+                    }
+                    renderInput={(params) => (
+                        <TextField {...params} label="🎭 테마 이름" variant="outlined"/>
+                    )}
+                    ListboxProps={{style: {maxHeight: "200px"}}}
+                />
 
-
-            <TextField
-                label="테마 시간 (분)"
-                variant="outlined"
-                fullWidth
-                type="text"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-            />
-
-            <Box sx={{display: 'flex', gap: 1}}>
+                {/* 테마 시간 입력 */}
                 <TextField
+                    label="⏳ 테마 시간 (분)"
+                    variant="outlined"
+                    type="text"
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
                     fullWidth
-                    label="예약 시간 후보 ( ex 1330 )"
+                />
+
+                {/* 예약 시간 입력 */}
+                <TextField
+                    label="⏰ 예약 시간 후보 (ex. 1330)"
                     variant="outlined"
                     type="text"
                     value={preferredTime}
                     onChange={handleTimeChange}
                     error={error}
                     helperText={error ? "올바른 시간 형식을 입력해주세요 (HH:MM)" : ""}
+                    fullWidth
                 />
-                <Button variant="contained" onClick={handleAddTime}>
-                    추가
-                </Button>
-            </Box>
 
-            <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1}}>
-                {preferredTimes.map((time, index) => (
-                    <Chip
-                        key={index}
-                        label={time}
-                        onDelete={() => handleDeleteTime(time)}
-                    />
-                ))}
-            </Box>
-        </Box>
+                {/* 추가된 예약 시간 목록 */}
+                {preferredTimes.length > 0 && (
+                    <Box
+                        sx={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            mt: 1,
+                            p: 1,
+                            borderRadius: 2,
+                            backgroundColor: "#f5f5f5"
+                        }}
+                    >
+                        {preferredTimes.map((time, index) => (
+                            <Chip
+                                key={index}
+                                label={time}
+                                onDelete={() => handleDeleteTime(time)}
+                                color="primary"
+                                variant="outlined"
+                                sx={{
+                                    fontWeight: "bold",
+                                    "&:hover": {backgroundColor: "#e3f2fd"}
+                                }}
+                            />
+                        ))}
+                    </Box>
+                )}
+            </Stack>
+        </Paper>
     );
 };
 
