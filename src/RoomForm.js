@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Box, Button, Chip, TextField, Typography} from "@mui/material";
+import Autocomplete from '@mui/material/Autocomplete';
 
 const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     const [roomName, setRoomName] = useState('');
@@ -46,7 +47,6 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
         }
     };
 
-
     const handleDeleteTime = (timeToDelete) => {
         setPreferredTimes(preferredTimes.filter(time => time !== timeToDelete));
     };
@@ -59,6 +59,16 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
         }
         updateInfo(index, val)
     }, [roomName, duration, preferredTimes, index]);
+
+    const handleThemeChange = (event, newValue) => {
+        if (newValue) {
+            setRoomName(newValue.name);
+            setDuration(newValue.time.replace('분', ''));
+        } else {
+            setRoomName('');
+            setDuration('');
+        }
+    };
 
     return (
         <Box sx={{
@@ -74,13 +84,16 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
                 정보 #{index + 1}
             </Typography>
 
-            <TextField
-                label="테마 이름 (구분만 가능하게)"
-                variant="outlined"
-                fullWidth
-                value={roomName}
-                onChange={(e) => setRoomName(e.target.value)}
+            <Autocomplete
+                options={themeInfo}
+                getOptionLabel={(option) => option.name}
+                renderInput={(params) => <TextField {...params} label="테마 이름" variant="outlined" />}
+                value={themeInfo.find(theme => theme.name === roomName) || null}
+                onChange={handleThemeChange}
+                filterOptions={(options, { inputValue }) => options.filter(option => option.name.includes(inputValue)).slice(0, 100)
+                }
             />
+
 
             <TextField
                 label="테마 시간 (분)"
@@ -120,4 +133,4 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     );
 };
 
-export default EscapeRoomForm
+export default EscapeRoomForm;

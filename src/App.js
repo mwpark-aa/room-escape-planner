@@ -22,12 +22,14 @@ export default function MultiEscapeRoomForm() {
         const lines = csv.split('\n');
         const headers = lines[0].split(',');
         const themeIndex = headers.indexOf('테마명');
+        const placeIndex = headers.indexOf('지역_소분류')
+        const roomIndex = headers.indexOf('매장명')
         const timeIndex = headers.indexOf('시간');
 
         return lines.slice(1).map(line => {
             const values = line.split(',');
             return {
-                name: values[themeIndex].trim(),
+                name: values[placeIndex].trim()  + '_' + values[roomIndex].trim() + '_' + values[themeIndex].trim(),
                 time: values[timeIndex].trim()
             };
         });
@@ -123,7 +125,6 @@ export default function MultiEscapeRoomForm() {
         fetch(csvFile)
             .then(response => response.text())
             .then(text => {
-                console.log(text)
                 const result = parseCSV(text);
                 setCSVData(result);
             });
