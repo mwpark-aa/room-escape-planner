@@ -96,7 +96,6 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
                     ListboxProps={{style: {maxHeight: "200px"}}}
                 />
 
-                {/* 테마 시간 입력 */}
                 <TextField
                     label="⏳ 테마 시간 (분)"
                     variant="outlined"
@@ -106,7 +105,6 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
                     fullWidth
                 />
 
-                {/* 예약 시간 입력 */}
                 <TextField
                     label="⏰ 예약 시간 후보 (ex. 1330)"
                     variant="outlined"
@@ -118,7 +116,6 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
                     fullWidth
                 />
 
-                {/* 추가된 예약 시간 목록 */}
                 {preferredTimes.length > 0 && (
                     <Box
                         sx={{

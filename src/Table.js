@@ -3,13 +3,31 @@ import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper,
 import dayjs from 'dayjs';
 
 const CustomTable = ({data}) => {
+
+    function getTimeDifference(startTime, endTime) {
+        return new Date(endTime) - new Date(startTime);
+    }
+
+    function sortSchedules(schedules) {
+        return schedules.sort((a, b) => {
+            const aStart = a[0].startTime;
+            const aEnd = a[a.length - 1].endTime;
+            const bStart = b[0].startTime;
+            const bEnd = b[b.length - 1].endTime;
+
+            return getTimeDifference(aStart, aEnd) - getTimeDifference(bStart, bEnd);
+        });
+    }
+
+    const sortedData = sortSchedules(data)
+
     return (
-        <TableContainer component={Paper} >
+        <TableContainer component={Paper}>
             <Typography variant="h6" gutterBottom component="div" sx={{
                 p: 2,
                 fontSize: {xs: '1rem', sm: '1.25rem'}
             }}>
-                가능한 일정 조합
+                조합 (총 시간이 적게 걸리는 순으로 정렬)
             </Typography>
             <Table sx={{minWidth: {xs: 300, sm: 650}}} aria-label="schedule table">
                 <TableHead>
@@ -34,7 +52,7 @@ const CustomTable = ({data}) => {
                     </TableRow>
                 </TableHead>
                 <TableBody>
-                    {data.map((combination, combinationIndex) => (
+                    {sortedData.map((combination, combinationIndex) => (
                         <React.Fragment key={combinationIndex}>
                             {combination.map((schedule, scheduleIndex) => (
                                 <TableRow
@@ -48,7 +66,7 @@ const CustomTable = ({data}) => {
                                             padding: {xs: '8px 4px', sm: '16px'},
                                             fontSize: {xs: '0.8rem', sm: '1rem'}
                                         }}>
-                                            조합 {combinationIndex + 1}
+                                            # {combinationIndex + 1}
                                         </TableCell>
                                     )}
                                     <TableCell component="th" scope="row" sx={{

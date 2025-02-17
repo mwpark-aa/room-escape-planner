@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
     Box,
     Button,
-    Container,
+    Container, Paper,
     TextField,
     Typography
 } from '@mui/material';
@@ -42,12 +42,13 @@ export default function MultiEscapeRoomForm() {
         return lines.slice(1).map(line => {
             const values = parseCSVLine(line)
             return {
-                name:  values[themeIndex].trim(),
+                name: values[themeIndex].trim(),
                 time: values[timeIndex].trim(),
-                place: values[placeIndex].trim()  + '_' + values[roomIndex].trim()
+                place: values[placeIndex].trim() + '_' + values[roomIndex].trim()
             };
         });
     };
+
     function findNonOverlappingCombinations(intervals) {
         const intervalsByName = {};
         intervals.forEach(interval => {
@@ -151,26 +152,32 @@ export default function MultiEscapeRoomForm() {
                 <Typography variant="h4" component="h1" gutterBottom>
                     방탈출 연방 계획
                 </Typography>
+
+                {[...Array(5)].map((_, index) => (
+                    <EscapeRoomForm key={index} index={index} updateInfo={updateSavedThemeInfo} themeInfo={csvData}/>
+                ))}
                 <TextField
                     label="테마 당 시간 간격 (분)"
                     variant="outlined"
                     type="text"
                     value={Number(timeRange)}
                     onChange={(e) => setTimeRange(e.target.value)}
-                    sx={{mb: 2}}
+                    sx={{mb: 2, mt: 3}}
                 />
-
-                {[...Array(5)].map((_, index) => (
-                    <EscapeRoomForm key={index} index={index} updateInfo={updateSavedThemeInfo} themeInfo={csvData}/>
-                ))}
 
                 <Button variant="contained" color="primary" sx={{mt: 2}} onClick={onClickButton}>
                     일정 만들어보기
                 </Button>
 
-                <Box sx={{display: 'flex', gap: 1}}>
-                    <CustomTable data={allComb}/>
-                </Box>
+                {allComb && allComb.length > 0 && (
+                    allComb[0].length > 0 ? (
+                        <Box sx={{display: 'flex', gap: 1}}>
+                            <CustomTable data={allComb}/>
+                        </Box>) : <Box>
+                        <Typography> 가능한 경우가 없습니다 </Typography>
+                    </Box>)
+                }
+
             </Box>
         </Container>
     );
