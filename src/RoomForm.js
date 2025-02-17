@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {Box, Button, Chip, TextField, Typography} from "@mui/material";
 
-const EscapeRoomForm = ({index, updateInfo}) => {
+const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     const [roomName, setRoomName] = useState('');
     const [duration, setDuration] = useState('');
     const [preferredTime, setPreferredTime] = useState('');
@@ -21,10 +21,10 @@ const EscapeRoomForm = ({index, updateInfo}) => {
     };
 
     const handleTimeChange = (e) => {
-        let input = e.target.value.replace(/\D/g, ""); // 숫자만 허용
+        let input = e.target.value.replace(/\D/g, "");
 
         if (input.length > 4) {
-            input = input.slice(0, 4); // 4자리까지만 입력 가능
+            input = input.slice(0, 4);
         }
 
         let formattedTime = input;
@@ -34,9 +34,13 @@ const EscapeRoomForm = ({index, updateInfo}) => {
 
         setPreferredTime(formattedTime);
 
-        // 시간 형식 검증
         if (validateTimeFormat(formattedTime)) {
             setError(false);
+
+            if (input.length === 4 && !preferredTimes.includes(formattedTime)) {
+                setPreferredTimes([...preferredTimes, formattedTime]);
+                setPreferredTime('');
+            }
         } else {
             setError(true);
         }
@@ -67,7 +71,7 @@ const EscapeRoomForm = ({index, updateInfo}) => {
             borderRadius: 2
         }}>
             <Typography variant="h5" component="h2" gutterBottom>
-                방탈출 예약 정보 #{index + 1}
+                정보 #{index + 1}
             </Typography>
 
             <TextField
@@ -90,7 +94,7 @@ const EscapeRoomForm = ({index, updateInfo}) => {
             <Box sx={{display: 'flex', gap: 1}}>
                 <TextField
                     fullWidth
-                    label="예약 시간 후보 ( ex 13:30 )"
+                    label="예약 시간 후보 ( ex 1330 )"
                     variant="outlined"
                     type="text"
                     value={preferredTime}

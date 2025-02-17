@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
     Box,
     Button,
@@ -9,14 +9,29 @@ import {
 import dayjs from "dayjs";
 import CustomTable from "./Table";
 import EscapeRoomForm from "./RoomForm";
+import csvFile from './constants/themeList.csv';
 
 
 export default function MultiEscapeRoomForm() {
     const [timeRange, setTimeRange] = useState(10);
     const [savedThemeInfo, setSavedThemeInfo] = useState({});
     const [allComb, setAllComb] = useState([]);
+    const [csvData, setCSVData] = useState([]);
 
+    const parseCSV = (csv) => {
+        const lines = csv.split('\n');
+        const headers = lines[0].split(',');
+        const themeIndex = headers.indexOf('테마명');
+        const timeIndex = headers.indexOf('시간');
 
+        return lines.slice(1).map(line => {
+            const values = line.split(',');
+            return {
+                name: values[themeIndex].trim(),
+                time: values[timeIndex].trim()
+            };
+        });
+    };
     function findNonOverlappingCombinations(intervals) {
         const intervalsByName = {};
         intervals.forEach(interval => {
@@ -104,8 +119,19 @@ export default function MultiEscapeRoomForm() {
         setAllComb(test)
     }
 
+    useEffect(() => {
+        fetch(csvFile)
+            .then(response => response.text())
+            .then(text => {
+                console.log(text)
+                const result = parseCSV(text);
+                setCSVData(result);
+            });
+    }, []);
+
+
     return (
-        <Container maxWidth="sm">
+        <Container maxWidth="md">
             <Box sx={{mt: 4, display: 'flex', flexDirection: 'column', gap: 2}}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     방탈출 연방 계획
@@ -120,14 +146,14 @@ export default function MultiEscapeRoomForm() {
                 />
 
                 {[...Array(5)].map((_, index) => (
-                    <EscapeRoomForm key={index} index={index} updateInfo={updateSavedThemeInfo}/>
+                    <EscapeRoomForm key={index} index={index} updateInfo={updateSavedThemeInfo} themeInfo={csvData}/>
                 ))}
 
                 <Button variant="contained" color="primary" sx={{mt: 2}} onClick={onClickButton}>
                     일정 만들어보기
                 </Button>
 
-                <Box sx={{display: 'flex', flexWrap: 'wrap', gap: 1}}>
+                <Box sx={{display: 'flex', gap: 1}}>
                     <CustomTable data={allComb}/>
                 </Box>
             </Box>

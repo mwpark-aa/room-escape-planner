@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 
 const CustomTable = ({data}) => {
     return (
-        <TableContainer component={Paper} sx={{overflowX: 'auto'}}>
+        <TableContainer component={Paper} >
             <Typography variant="h6" gutterBottom component="div" sx={{
                 p: 2,
                 fontSize: {xs: '1rem', sm: '1.25rem'}
