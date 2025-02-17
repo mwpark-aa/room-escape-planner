@@ -18,6 +18,19 @@ export default function MultiEscapeRoomForm() {
     const [allComb, setAllComb] = useState([]);
     const [csvData, setCSVData] = useState([]);
 
+    function parseCSVLine(line) {
+        const regex = /(?:^|,)(?:"([^"]*(?:""[^"]*)*)"|([^,]*))/g;
+        const values = [];
+        let match;
+
+        while ((match = regex.exec(line)) !== null) {
+            const value = match[1] !== undefined ? match[1].replace(/""/g, '"') : match[2];
+            values.push(value.trim());
+        }
+
+        return values;
+    }
+
     const parseCSV = (csv) => {
         const lines = csv.split('\n');
         const headers = lines[0].split(',');
@@ -27,10 +40,11 @@ export default function MultiEscapeRoomForm() {
         const timeIndex = headers.indexOf('시간');
 
         return lines.slice(1).map(line => {
-            const values = line.split(',');
+            const values = parseCSVLine(line)
             return {
-                name: values[placeIndex].trim()  + '_' + values[roomIndex].trim() + '_' + values[themeIndex].trim(),
-                time: values[timeIndex].trim()
+                name:  values[themeIndex].trim(),
+                time: values[timeIndex].trim(),
+                place: values[placeIndex].trim()  + '_' + values[roomIndex].trim()
             };
         });
     };

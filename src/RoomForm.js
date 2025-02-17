@@ -62,8 +62,13 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
 
     const handleThemeChange = (event, newValue) => {
         if (newValue) {
-            setRoomName(newValue.name);
-            setDuration(newValue.time.replace('분', ''));
+            if (typeof newValue === 'string') {
+                setRoomName(newValue);
+                setDuration('');
+            } else {
+                setRoomName(newValue.name);
+                setDuration(newValue.time?.replace('분', '') || '');
+            }
         } else {
             setRoomName('');
             setDuration('');
@@ -85,13 +90,23 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
             </Typography>
 
             <Autocomplete
+                freeSolo
                 options={themeInfo}
-                getOptionLabel={(option) => option.name}
-                renderInput={(params) => <TextField {...params} label="테마 이름" variant="outlined" />}
+                getOptionLabel={(option) => {
+                    if (typeof option === 'string') {
+                        return option;
+                    }
+                    return option.name || '';
+                }}
+                groupBy={(option) => option.place}
                 value={themeInfo.find(theme => theme.name === roomName) || null}
                 onChange={handleThemeChange}
-                filterOptions={(options, { inputValue }) => options.filter(option => option.name.includes(inputValue)).slice(0, 100)
-                }
+                filterOptions={(options, { inputValue }) => options.filter(option => option.name.includes(inputValue)).slice(0, 100)}
+                renderInput={(params) =>
+                    <TextField {...params} label="테마 이름" variant="outlined" />}
+                ListboxProps={{
+                    style: { maxHeight: '200px' }
+                }}
             />
 
 
