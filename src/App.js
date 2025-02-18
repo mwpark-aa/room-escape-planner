@@ -162,10 +162,12 @@ export default function MultiEscapeRoomForm() {
 
     useEffect(() => {
         if (allComb.length > 0) {
-            const element = document.getElementById('make-plan');
-            if (element) {
-                element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
-            }
+            setTimeout(() => {
+                const element = document.getElementById('make-plan');
+                if (element) {
+                    element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+                }
+            }, 100);
         }
     }, [allComb]);
 
