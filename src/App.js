@@ -2,7 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {
     Box,
     Button,
+    Collapse,
     Container,
+    IconButton,
     TextField,
     Typography
 } from '@mui/material';
@@ -10,6 +12,8 @@ import dayjs from "dayjs";
 import CustomTable from "./Table";
 import EscapeRoomForm from "./RoomForm";
 import csvFile from './constants/themeList.csv';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 
 
 export default function MultiEscapeRoomForm() {
@@ -17,6 +21,17 @@ export default function MultiEscapeRoomForm() {
     const [savedThemeInfo, setSavedThemeInfo] = useState({});
     const [allComb, setAllComb] = useState([]);
     const [csvData, setCSVData] = useState([]);
+    const [formCount, setFormCount] = useState(1);
+
+    const addForm = () => {
+        setFormCount(prevCount => prevCount + 1);
+    };
+
+    const removeForm = () => {
+        if (formCount > 1) {
+            setFormCount(prevCount => prevCount - 1);
+        }
+    };
 
     const updateSavedThemeInfo = (index, themeInfo) => {
         setSavedThemeInfo(prevState => ({
@@ -133,7 +148,6 @@ export default function MultiEscapeRoomForm() {
         }
 
         const test = findNonOverlappingCombinations(all_case)
-
         setAllComb(test)
     }
 
@@ -146,6 +160,15 @@ export default function MultiEscapeRoomForm() {
             });
     }, []);
 
+    useEffect(() => {
+        if (allComb.length > 0) {
+            const element = document.getElementById('make-plan');
+            if (element) {
+                element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+            }
+        }
+    }, [allComb]);
+
 
     return (
         <Container maxWidth="md">
@@ -154,9 +177,20 @@ export default function MultiEscapeRoomForm() {
                     방탈출 연방 계획
                 </Typography>
 
-                {[...Array(5)].map((_, index) => (
-                    <EscapeRoomForm key={index} index={index} updateInfo={updateSavedThemeInfo} themeInfo={csvData}/>
+                {[...Array(formCount)].map((_, index) => (
+                    <Collapse in={true} key={index}>
+                        <EscapeRoomForm index={index} updateInfo={updateSavedThemeInfo} themeInfo={csvData}/>
+                    </Collapse>
                 ))}
+
+                <Box sx={{display: 'flex', justifyContent: 'center', gap: 2, mt: 2}}>
+                    <IconButton onClick={removeForm} disabled={formCount <= 1}>
+                        <RemoveIcon/>
+                    </IconButton>
+                    <IconButton onClick={addForm}>
+                        <AddIcon/>
+                    </IconButton>
+                </Box>
                 <TextField
                     label="테마 당 시간 간격 (분)"
                     variant="outlined"
@@ -166,7 +200,7 @@ export default function MultiEscapeRoomForm() {
                     sx={{mb: 2, mt: 3}}
                 />
 
-                <Button variant="contained" color="primary" sx={{mt: 2}} onClick={onClickButton}>
+                <Button variant="contained" color="primary" sx={{mt: 2}} onClick={onClickButton} id="make-plan">
                     일정 만들어보기
                 </Button>
 
