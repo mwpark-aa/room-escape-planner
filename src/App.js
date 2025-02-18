@@ -130,7 +130,7 @@ export default function MultiEscapeRoomForm() {
         const currentDate = dayjs().format('YYYY-MM-DD')
         let all_case = []
 
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < formCount; i++) {
             const tmp = savedThemeInfo[i]
             const timeCase = tmp['preferredTimes']
 
