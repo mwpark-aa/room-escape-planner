@@ -22,6 +22,7 @@ export default function MultiEscapeRoomForm() {
     const [allComb, setAllComb] = useState([]);
     const [csvData, setCSVData] = useState([]);
     const [formCount, setFormCount] = useState(1);
+    const [themeNameList, setThemeNameList] = useState([]);
 
     const addForm = () => {
         setFormCount(prevCount => prevCount + 1);
@@ -29,6 +30,11 @@ export default function MultiEscapeRoomForm() {
 
     const removeForm = () => {
         if (formCount > 1) {
+            setSavedThemeInfo(prevThemes => {
+                const updatedThemes = {...prevThemes};
+                delete updatedThemes[formCount - 1];
+                return updatedThemes;
+            });
             setFormCount(prevCount => prevCount - 1);
         }
     };
@@ -75,61 +81,41 @@ export default function MultiEscapeRoomForm() {
     };
 
     const findNonOverlappingCombinations = (intervals) => {
-        const intervalsByName = {};
-        intervals.forEach(interval => {
-            if (!intervalsByName[interval.name]) {
-                intervalsByName[interval.name] = [];
-            }
-            intervalsByName[interval.name].push(interval);
-        });
+        const intervalsByName = intervals.reduce((acc, interval) => {
+            (acc[interval.name] ||= []).push(interval);
+            return acc;
+        }, {});
 
         const nameGroups = Object.values(intervalsByName);
 
         const generateCombinations = (currentCombination, remainingGroups) => {
-            if (remainingGroups.length === 0) {
-                return [currentCombination];
-            }
+            if (remainingGroups.length === 0) return [currentCombination];
 
-            const combinations = [];
-            const currentGroup = remainingGroups[0];
+            const [currentGroup, ...newRemainingGroups] = remainingGroups;
+            let combinations = [];
 
-            for (let j = 0; j < currentGroup.length; j++) {
-                const currentInterval = currentGroup[j];
-
-                const isOverlapping = currentCombination.some(interval =>
-                    (currentInterval.startTime < interval.endTime.add(timeRange, 'minutes') &&
-                        currentInterval.endTime.add(timeRange, 'minutes') > interval.startTime)
-                );
-
-                if (!isOverlapping) {
-                    const newCombination = [...currentCombination, currentInterval];
-                    const newRemainingGroups = remainingGroups.slice(1);
-
-                    combinations.push(...generateCombinations(newCombination, newRemainingGroups));
+            currentGroup.forEach(interval => {
+                if (!currentCombination.some(existing =>
+                    interval.startTime < existing.endTime.add(timeRange, 'minutes') &&
+                    interval.endTime.add(timeRange, 'minutes') > existing.startTime
+                )) {
+                    combinations.push(...generateCombinations([...currentCombination, interval], newRemainingGroups));
                 }
-            }
+            });
 
             return combinations;
-        }
+        };
 
-        const allCombinations = generateCombinations([], nameGroups);
+        const validCombinations = generateCombinations([], nameGroups)
+            .filter(combo => combo.length === nameGroups.length)
+            .map(combo => combo.sort((a, b) => a.startTime.diff(b.startTime)));
 
-        const validCombinations = allCombinations.filter(combo => combo.length === nameGroups.length);
-
-        const sortedCombinations = validCombinations.map(combo =>
-            combo.sort((a, b) => a.startTime.diff(b.startTime))
-        );
-
-        sortedCombinations.sort((comboA, comboB) =>
-            comboA[0].startTime.diff(comboB[0].startTime)
-        );
-        return Array.from(new Set(sortedCombinations.map(JSON.stringify)), JSON.parse);
-    }
+        return [...new Map(validCombinations.map(combo => [combo.map(i => i.startTime).join(','), combo])).values()];
+    };
 
     const onClickButton = () => {
         const currentDate = dayjs().format('YYYY-MM-DD')
         let all_case = []
-
         for (let i = 0; i < formCount; i++) {
             const tmp = savedThemeInfo[i]
             const timeCase = tmp['preferredTimes']
@@ -146,6 +132,8 @@ export default function MultiEscapeRoomForm() {
                 all_case.push(dict)
             }
         }
+        setThemeNameList(Object.values(savedThemeInfo).map(v => v.roomName))
+
 
         const test = findNonOverlappingCombinations(all_case)
         setAllComb(test)
@@ -209,7 +197,7 @@ export default function MultiEscapeRoomForm() {
                 {allComb && allComb.length > 0 && (
                     allComb[0].length > 0 ? (
                         <Box sx={{display: 'flex', gap: 1}}>
-                            <CustomTable data={allComb}/>
+                            <CustomTable data={allComb} themeNameList={themeNameList}/>
                         </Box>) : <Box>
                         <Typography> 가능한 경우가 없습니다 </Typography>
                     </Box>)
