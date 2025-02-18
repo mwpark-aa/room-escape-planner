@@ -1,15 +1,26 @@
 import React from 'react';
-import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Typography} from '@mui/material';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Paper,
+    Typography,
+    Box,
+    Checkbox
+} from '@mui/material';
 import dayjs from 'dayjs';
 
 const CustomTable = ({data}) => {
 
-    function getTimeDifference(startTime, endTime) {
-        return new Date(endTime) - new Date(startTime);
-    }
+    const sortByTimeDiff = (data) => {
+        function getTimeDifference(startTime, endTime) {
+            return new Date(endTime) - new Date(startTime);
+        }
 
-    function sortSchedules(schedules) {
-        return schedules.sort((a, b) => {
+        return data.sort((a, b) => {
             const aStart = a[0].startTime;
             const aEnd = a[a.length - 1].endTime;
             const bStart = b[0].startTime;
@@ -19,16 +30,32 @@ const CustomTable = ({data}) => {
         });
     }
 
-    const sortedData = sortSchedules(data)
+    const getColorForPlace = (() => {
+        const colors = ['#fdf5f5', '#f6fff6', '#f7f7ff', '#fffff7', '#FFE0FF', '#E0FFFF'];
+        const placeColors = {};
+        let colorIndex = 0;
+
+        return (place) => {
+            if (!placeColors[place]) {
+                placeColors[place] = colors[colorIndex % colors.length];
+                colorIndex++;
+            }
+            return placeColors[place];
+        };
+    })();
+
+    const sortedData = sortByTimeDiff(data)
 
     return (
-        <TableContainer component={Paper}>
-            <Typography variant="h6" gutterBottom component="div" sx={{
-                p: 2,
-                fontSize: {xs: '1rem', sm: '1.25rem'}
-            }}>
-                조합 (총 시간이 적게 걸리는 순으로 정렬)
-            </Typography>
+        <TableContainer component={Paper} sx={{borderRadius: 3}} elevation={3}>
+            <Box>
+                <Typography variant="h6" gutterBottom component="div" sx={{
+                    p: 2,
+                    fontSize: {xs: '1rem', sm: '1.25rem'}
+                }}>
+                    조합 (총 시간이 적게 걸리는 순으로 정렬)
+                </Typography>
+            </Box>
             <Table sx={{minWidth: {xs: 300, sm: 650}}} aria-label="schedule table">
                 <TableHead>
                     <TableRow>
@@ -57,9 +84,7 @@ const CustomTable = ({data}) => {
                             {combination.map((schedule, scheduleIndex) => (
                                 <TableRow
                                     key={`${combinationIndex}-${scheduleIndex}`}
-                                    sx={{
-                                        borderBottom: scheduleIndex === combination.length - 1 && `2px solid`
-                                    }}
+                                    sx={{borderBottom: scheduleIndex === combination.length - 1 ? `2px solid` : ''}}
                                 >
                                     {scheduleIndex === 0 && (
                                         <TableCell align="center" rowSpan={combination.length} sx={{
@@ -73,7 +98,8 @@ const CustomTable = ({data}) => {
                                         padding: {xs: '8px 4px', sm: '16px'},
                                         fontSize: {xs: '0.8rem', sm: '1rem'},
                                         whiteSpace: 'normal',
-                                        wordBreak: 'break-word'
+                                        wordBreak: 'break-word',
+                                        backgroundColor: getColorForPlace(schedule.place),
                                     }}>
                                         {schedule.name}
                                     </TableCell>

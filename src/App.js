@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {
     Box,
     Button,
-    Container, Paper,
+    Container,
     TextField,
     Typography
 } from '@mui/material';
@@ -18,7 +18,17 @@ export default function MultiEscapeRoomForm() {
     const [allComb, setAllComb] = useState([]);
     const [csvData, setCSVData] = useState([]);
 
-    function parseCSVLine(line) {
+    const updateSavedThemeInfo = (index, themeInfo) => {
+        setSavedThemeInfo(prevState => ({
+            ...prevState,
+            [index]: {
+                ...prevState[index],
+                ...themeInfo
+            }
+        }));
+    };
+
+    const parseCSVLine = (line) => {
         const regex = /(?:^|,)(?:"([^"]*(?:""[^"]*)*)"|([^,]*))/g;
         const values = [];
         let match;
@@ -49,7 +59,7 @@ export default function MultiEscapeRoomForm() {
         });
     };
 
-    function findNonOverlappingCombinations(intervals) {
+    const findNonOverlappingCombinations = (intervals) => {
         const intervalsByName = {};
         intervals.forEach(interval => {
             if (!intervalsByName[interval.name]) {
@@ -60,7 +70,7 @@ export default function MultiEscapeRoomForm() {
 
         const nameGroups = Object.values(intervalsByName);
 
-        function generateCombinations(currentCombination, remainingGroups) {
+        const generateCombinations = (currentCombination, remainingGroups) => {
             if (remainingGroups.length === 0) {
                 return [currentCombination];
             }
@@ -101,16 +111,6 @@ export default function MultiEscapeRoomForm() {
         return Array.from(new Set(sortedCombinations.map(JSON.stringify)), JSON.parse);
     }
 
-    const updateSavedThemeInfo = (index, themeInfo) => {
-        setSavedThemeInfo(prevState => ({
-            ...prevState,
-            [index]: {
-                ...prevState[index],
-                ...themeInfo
-            }
-        }));
-    };
-
     const onClickButton = () => {
         const currentDate = dayjs().format('YYYY-MM-DD')
         let all_case = []
@@ -122,6 +122,7 @@ export default function MultiEscapeRoomForm() {
             for (let j = 0; j < timeCase.length; j++) {
                 const dateTimeString = `${currentDate} ${timeCase[j]}`
                 const dict = {
+                    place: tmp['place'],
                     name: tmp['roomName'],
                     startTime: dayjs(dateTimeString, "YYYY-MM-DD HH:mm"),
                     endTime: dayjs(dateTimeString, "YYYY-MM-DD HH:mm").add(Number(tmp['duration']), "minute"),

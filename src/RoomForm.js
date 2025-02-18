@@ -1,15 +1,33 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Chip, Paper, Stack, TextField, Typography} from "@mui/material";
+import {Box, Chip, Paper, Stack, TextField, Typography} from "@mui/material";
 import Autocomplete from '@mui/material/Autocomplete';
 
 const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
     const [roomName, setRoomName] = useState('');
     const [duration, setDuration] = useState('');
+    const [place, setPlace] = useState('');
     const [preferredTime, setPreferredTime] = useState('');
     const [preferredTimes, setPreferredTimes] = useState([]);
-
     const [error, setError] = useState(false);
 
+    const handleThemeChange = (event, newValue) => {
+        if (newValue) {
+            if (typeof newValue === 'string') {
+                setRoomName(newValue);
+                setPlace('')
+                setDuration('');
+            } else {
+                setRoomName(newValue.name);
+                setDuration(newValue.time?.replace('분', '') || '');
+                setPlace(newValue.place)
+            }
+        } else {
+            setRoomName('');
+            setDuration('');
+            setPlace('')
+        }
+    };
+    
     const validateTimeFormat = (time) => {
         const regex = /^([01]\d|2[0-3]):([0-5]\d)$/;
         return regex.test(time);
@@ -47,6 +65,7 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
 
     useEffect(() => {
         const val = {
+            place: place,
             roomName: roomName,
             duration: duration,
             preferredTimes: preferredTimes,
@@ -54,24 +73,9 @@ const EscapeRoomForm = ({index, updateInfo, themeInfo}) => {
         updateInfo(index, val)
     }, [roomName, duration, preferredTimes, index]);
 
-    const handleThemeChange = (event, newValue) => {
-        if (newValue) {
-            if (typeof newValue === 'string') {
-                setRoomName(newValue);
-                setDuration('');
-            } else {
-                setRoomName(newValue.name);
-                setDuration(newValue.time?.replace('분', '') || '');
-            }
-        } else {
-            setRoomName('');
-            setDuration('');
-        }
-    };
-
     return (
         <Paper elevation={3} sx={{p: 3, borderRadius: 3}}>
-            <Typography variant="h6" component="h2" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom pb={3}>
                 🎯 #{index + 1}
             </Typography>
 
