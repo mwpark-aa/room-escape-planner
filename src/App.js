@@ -167,7 +167,7 @@ export default function MultiEscapeRoomForm() {
                 if (element) {
                     element.scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
                 }
-            }, 100);
+            }, 0);
         }
     }, [allComb]);
 
