@@ -65,6 +65,11 @@ const CustomTable = ({data, themeNameList}) => {
     };
 
     const handleTouchStart = useCallback((e, index) => {
+        const listRect = listRef.current.getBoundingClientRect();
+        setDraggingPosition({
+            x: e.touches[0].clientX - listRect.left,
+            y: e.touches[0].clientY - listRect.top,
+        });
         touchStartY.current = e.touches[0].clientY;
         setDraggingIndex(index);
     }, []);
@@ -87,7 +92,7 @@ const CustomTable = ({data, themeNameList}) => {
         const calculatedIndex = Math.round(draggingIndex + deltaY / itemHeight);
 
         if (calculatedIndex >= 0 && calculatedIndex < customOrder.length && calculatedIndex !== newIndex) {
-            setNewIndex(calculatedIndex); // 새로운 위치만 저장
+            setNewIndex(calculatedIndex);
         }
     }, [draggingIndex, customOrder.length, newIndex]);
 
@@ -222,7 +227,7 @@ const CustomTable = ({data, themeNameList}) => {
                         ))}
                     </List>
 
-                    <Box sx={{height: 300, overflowY: "auto", my: 2, alignContent: 'center'}}>
+                    <Box sx={{height: 300, my: 2, alignContent: 'center'}}>
                         <List ref={listRef}>
                             {customOrder.map((theme, index) => (
                                 <Box
