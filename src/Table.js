@@ -1,4 +1,4 @@
-import React, {useState, useRef, useEffect} from "react";
+import React, {useState, useRef, useEffect, useCallback} from "react";
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Paper, Box, Button, Modal, Typography, List, ListItem, ListItemIcon, Checkbox, ListItemText,
@@ -8,13 +8,17 @@ import dayjs from "dayjs";
 const CustomTable = ({data, themeNameList}) => {
     const [openModal, setOpenModal] = useState(false);
     const [customOrder, setCustomOrder] = useState([]);
-    const [selectedThemes, setSelectedThemes] = useState([]);
+    const [selectedThemes, setSelectedThemes] = useState(themeNameList);
     const [filteredData, setFilteredData] = useState(data);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const dragItem = useRef(null);
+    const [draggingPosition, setDraggingPosition] = useState({x: 0, y: 0});
     const dragOverItem = useRef(null);
-    const touchStartIndex = useRef(null);
-    const touchMoveIndex = useRef(null);
+    const [draggingIndex, setDraggingIndex] = useState(null);
+    const touchStartY = useRef(null);
+    const listRef = useRef(null);
+    const [newIndex, setNewIndex] = useState(null);
+
 
     useEffect(() => {
         setCustomOrder(selectedThemes);
@@ -44,12 +48,10 @@ const CustomTable = ({data, themeNameList}) => {
 
     const dragStart = (e, position) => {
         dragItem.current = position;
-        e.target.style.opacity = "0.5";
     };
 
     const dragEnter = (e, position) => {
         dragOverItem.current = position;
-        e.target.style.backgroundColor = "#f0f0f0";
     };
 
     const drop = (e) => {
@@ -60,31 +62,48 @@ const CustomTable = ({data, themeNameList}) => {
         dragItem.current = null;
         dragOverItem.current = null;
         setCustomOrder(copyListItems);
-        e.target.style.opacity = "1";
-        e.target.style.backgroundColor = "lightgray";
     };
 
-    const handleTouchStart = (e, index) => {
-        touchStartIndex.current = index;
-    };
+    const handleTouchStart = useCallback((e, index) => {
+        touchStartY.current = e.touches[0].clientY;
+        setDraggingIndex(index);
+    }, []);
 
-    const handleTouchMove = (e) => {
-        const touchY = e.touches[0].clientY;
-        const itemHeight = e.target.clientHeight;
-        touchMoveIndex.current = Math.floor((touchY - e.target.parentElement.offsetTop) / itemHeight);
-    };
 
-    const handleTouchEnd = () => {
-        if (touchStartIndex.current !== null && touchMoveIndex.current !== null) {
-            const copyListItems = [...customOrder];
-            const draggedItem = copyListItems[touchStartIndex.current];
-            copyListItems.splice(touchStartIndex.current, 1);
-            copyListItems.splice(touchMoveIndex.current, 0, draggedItem);
-            setCustomOrder(copyListItems);
+    const handleTouchMove = useCallback((e) => {
+        if (draggingIndex === null || !listRef.current) return;
+
+        const touch = e.touches[0];
+        const listRect = listRef.current.getBoundingClientRect();
+
+        setDraggingPosition({
+            x: listRect.left - 12,
+            y: touch.clientY - listRect.top,
+        });
+
+        const touchY = touch.clientY;
+        const deltaY = touchY - touchStartY.current;
+        const itemHeight = listRef.current.children[draggingIndex].offsetHeight;
+        const calculatedIndex = Math.round(draggingIndex + deltaY / itemHeight);
+
+        if (calculatedIndex >= 0 && calculatedIndex < customOrder.length && calculatedIndex !== newIndex) {
+            setNewIndex(calculatedIndex); // 새로운 위치만 저장
         }
-        touchStartIndex.current = null;
-        touchMoveIndex.current = null;
-    };
+    }, [draggingIndex, customOrder.length, newIndex]);
+
+    const handleTouchEnd = useCallback(() => {
+        if (draggingIndex !== null && newIndex !== null && draggingIndex !== newIndex) {
+            setCustomOrder((prevOrder) => {
+                const newOrder = [...prevOrder];
+                const [removed] = newOrder.splice(draggingIndex, 1);
+                newOrder.splice(newIndex, 0, removed);
+                return newOrder;
+            });
+        }
+        setDraggingIndex(null);
+        setNewIndex(null);
+    }, [draggingIndex, newIndex]);
+
 
     const getColorForPlace = (() => {
         const colors = ['#fdf5f5', '#f6fff6', '#f7f7ff', '#fffff7', '#FFE0FF', '#E0FFFF'];
@@ -182,6 +201,7 @@ const CustomTable = ({data, themeNameList}) => {
                         borderRadius: 2,
                         boxShadow: 24,
                         p: 4,
+                        m: 0
                     }}
                 >
                     <Typography variant="h6" component="h2" gutterBottom>
@@ -193,7 +213,7 @@ const CustomTable = ({data, themeNameList}) => {
 
                     <List>
                         {themeNameList.map((theme) => (
-                            <ListItem key={theme} button onClick={() => handleThemeSelection(theme)} sx={{pb: 0}}>
+                            <ListItem key={theme} button onClick={() => handleThemeSelection(theme)} sx={{py: 0}}>
                                 <ListItemIcon>
                                     <Checkbox checked={selectedThemes.includes(theme)}/>
                                 </ListItemIcon>
@@ -202,29 +222,40 @@ const CustomTable = ({data, themeNameList}) => {
                         ))}
                     </List>
 
-                    <Box sx={{maxHeight: 200, overflowY: "auto", my: 2}}>
-                        {customOrder.map((theme, index) => (
-                            <Box
-                                key={theme}
-                                draggable={!isMobile}
-                                onDragStart={(e) => !isMobile && dragStart(e, index)}
-                                onDragEnter={(e) => !isMobile && dragEnter(e, index)}
-                                onDragEnd={!isMobile ? drop : undefined}
-                                onTouchStart={(e) => isMobile && handleTouchStart(e, index)}
-                                onTouchMove={(e) => isMobile && handleTouchMove(e)}
-                                onTouchEnd={() => isMobile && handleTouchEnd()}
-                                sx={{
-                                    p: 1,
-                                    mb: 1,
-                                    bgcolor: "lightgray",
-                                    borderRadius: 1,
-                                    cursor: "grab",
-                                    textAlign: "center",
-                                }}
-                            >
-                                {theme}
-                            </Box>
-                        ))}
+                    <Box sx={{position: 'relative', maxHeight: 200, overflowY: "auto", my: 2}}>
+                        <List ref={listRef}>
+                            {customOrder.map((theme, index) => (
+                                <Box
+                                    key={theme}
+                                    onTouchStart={(e) => handleTouchStart(e, index)}
+                                    onTouchMove={handleTouchMove}
+                                    onTouchEnd={handleTouchEnd}
+                                    draggable={!isMobile}
+                                    onDragStart={(e) => !isMobile && dragStart(e, index)}
+                                    onDragEnter={(e) => !isMobile && dragEnter(e, index)}
+                                    onDragEnd={!isMobile ? drop : undefined}
+                                    sx={{
+                                        py: 1,
+                                        mb: 1,
+                                        bgcolor: draggingIndex === index ? "#f8feff" : "white",
+                                        border: "thin #c6c6c6 solid",
+                                        borderRadius: 3,
+                                        cursor: "grab",
+                                        transition: draggingIndex === index ? "none" : "transform 0.2s ease-out, box-shadow 0.2s ease-out",
+                                        boxShadow: draggingIndex === index ? "0px 4px 10px rgba(0,0,0,0.2)" : "none",
+                                        zIndex: draggingIndex === index ? 1000 : 1,
+                                        position: draggingIndex === index ? "absolute" : "static",
+                                        left: draggingIndex === index ? `${draggingPosition.x}px` : "auto",
+                                        top: draggingIndex === index ? `${draggingPosition.y}px` : "auto",
+                                        transform: draggingIndex === index ? "translate(-50%, -50%)" : "none",
+                                        width: "100%",
+                                        height: "auto",
+                                    }}
+                                >
+                                    <Typography textAlign="center">{theme}</Typography>
+                                </Box>
+                            ))}
+                        </List>
                     </Box>
                     <Button onClick={handleCloseModal} variant="contained" sx={{mt: 2, width: "100%"}}>
                         필터 적용
