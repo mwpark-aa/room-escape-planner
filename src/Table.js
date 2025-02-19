@@ -8,7 +8,7 @@ import dayjs from "dayjs";
 const CustomTable = ({data, themeNameList}) => {
     const [openModal, setOpenModal] = useState(false);
     const [customOrder, setCustomOrder] = useState([]);
-    const [selectedThemes, setSelectedThemes] = useState(themeNameList);
+    const [selectedThemes, setSelectedThemes] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const dragItem = useRef(null);
@@ -222,7 +222,7 @@ const CustomTable = ({data, themeNameList}) => {
                         ))}
                     </List>
 
-                    <Box sx={{position: 'relative', maxHeight: 200, overflowY: "auto", my: 2}}>
+                    <Box sx={{height: 300, overflowY: "auto", my: 2, alignContent: 'center'}}>
                         <List ref={listRef}>
                             {customOrder.map((theme, index) => (
                                 <Box
