@@ -77,7 +77,7 @@ const CustomTable = ({data, themeNameList}) => {
         const listRect = listRef.current.getBoundingClientRect();
 
         setDraggingPosition({
-            x: listRect.left - 12,
+            x: touch.clientX - listRect.left,
             y: touch.clientY - listRect.top,
         });
 
