@@ -1,26 +1,32 @@
 import React, {useState, useRef, useEffect} from "react";
 import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-    Paper, Box, Checkbox, Button, Modal, Typography, List, ListItem, ListItemText, ListItemIcon
+    Paper, Box, Button, Modal, Typography, List, ListItem, ListItemIcon, Checkbox, ListItemText,
 } from "@mui/material";
 import dayjs from "dayjs";
 
 const CustomTable = ({data, themeNameList}) => {
     const [openModal, setOpenModal] = useState(false);
     const [customOrder, setCustomOrder] = useState([]);
-    const [selectedThemes, setSelectedThemes] = useState([]); // 사용자가 선택한 테마
+    const [selectedThemes, setSelectedThemes] = useState([]);
     const [filteredData, setFilteredData] = useState(data);
-    const dragItem = useRef();
-    const dragOverItem = useRef();
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    const dragItem = useRef(null);
+    const dragOverItem = useRef(null);
+    const touchStartIndex = useRef(null);
+    const touchMoveIndex = useRef(null);
 
     useEffect(() => {
-        // 사용자가 선택한 테마만 customOrder에 추가
         setCustomOrder(selectedThemes);
     }, [selectedThemes]);
 
     useEffect(() => {
-        filterByCustomOrder();
-    }, [customOrder, data]);
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 768);
+        };
+        window.addEventListener("resize", handleResize);
+        return () => window.removeEventListener("resize", handleResize);
+    }, []);
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => {
@@ -58,28 +64,26 @@ const CustomTable = ({data, themeNameList}) => {
         e.target.style.backgroundColor = "lightgray";
     };
 
-    const filterByCustomOrder = () => {
-        if (customOrder.length === 0) {
-            setFilteredData(data);
-            return;
+    const handleTouchStart = (e, index) => {
+        touchStartIndex.current = index;
+    };
+
+    const handleTouchMove = (e) => {
+        const touchY = e.touches[0].clientY;
+        const itemHeight = e.target.clientHeight;
+        touchMoveIndex.current = Math.floor((touchY - e.target.parentElement.offsetTop) / itemHeight);
+    };
+
+    const handleTouchEnd = () => {
+        if (touchStartIndex.current !== null && touchMoveIndex.current !== null) {
+            const copyListItems = [...customOrder];
+            const draggedItem = copyListItems[touchStartIndex.current];
+            copyListItems.splice(touchStartIndex.current, 1);
+            copyListItems.splice(touchMoveIndex.current, 0, draggedItem);
+            setCustomOrder(copyListItems);
         }
-
-        const filteredCombinations = data.filter((combination) => {
-            let currentIndex = 0;
-            for (const theme of combination) {
-                // **selectedThemes에 포함된 테마만 순서를 보장**
-                if (selectedThemes.includes(theme.name)) {
-                    const themeIndex = customOrder.indexOf(theme.name);
-                    if (themeIndex === -1 || themeIndex < currentIndex) {
-                        return false;
-                    }
-                    currentIndex = themeIndex;
-                }
-            }
-            return true;
-        });
-
-        setFilteredData(filteredCombinations);
+        touchStartIndex.current = null;
+        touchMoveIndex.current = null;
     };
 
     const getColorForPlace = (() => {
@@ -95,6 +99,29 @@ const CustomTable = ({data, themeNameList}) => {
             return placeColors[place];
         };
     })();
+
+    const filterByCustomOrder = () => {
+        if (customOrder.length === 0) {
+            setFilteredData(data);
+            return;
+        }
+
+        const filteredCombinations = data.filter((combination) => {
+            let currentIndex = 0;
+            for (const theme of combination) {
+                if (selectedThemes.includes(theme.name)) {
+                    const themeIndex = customOrder.indexOf(theme.name);
+                    if (themeIndex === -1 || themeIndex < currentIndex) {
+                        return false;
+                    }
+                    currentIndex = themeIndex;
+                }
+            }
+            return true;
+        });
+
+        setFilteredData(filteredCombinations);
+    };
 
     return (
         <>
@@ -143,7 +170,6 @@ const CustomTable = ({data, themeNameList}) => {
                 </Table>
             </TableContainer>
 
-            {/* 🔹 테마 선택 및 순서 변경 모달 */}
             <Modal open={openModal} onClose={handleCloseModal}>
                 <Box
                     sx={{
@@ -162,13 +188,12 @@ const CustomTable = ({data, themeNameList}) => {
                         테마 순서 필터
                     </Typography>
                     <Typography variant="body2" gutterBottom>
-                        선택한 테마만 순서를 조정할 수 있습니다.
+                        선택한 테마를 움직여 순서를 고정 가능!.
                     </Typography>
 
-                    {/* ✅ 테마 선택 리스트 */}
                     <List>
                         {themeNameList.map((theme) => (
-                            <ListItem key={theme} button onClick={() => handleThemeSelection(theme)}>
+                            <ListItem key={theme} button onClick={() => handleThemeSelection(theme)} sx={{pb: 0}}>
                                 <ListItemIcon>
                                     <Checkbox checked={selectedThemes.includes(theme)}/>
                                 </ListItemIcon>
@@ -177,16 +202,17 @@ const CustomTable = ({data, themeNameList}) => {
                         ))}
                     </List>
 
-                    {/* ✅ 선택한 테마 순서 변경 UI */}
                     <Box sx={{maxHeight: 200, overflowY: "auto", my: 2}}>
                         {customOrder.map((theme, index) => (
                             <Box
                                 key={theme}
-                                draggable
-                                onDragStart={(e) => dragStart(e, index)}
-                                onDragEnter={(e) => dragEnter(e, index)}
-                                onDragEnd={drop}
-                                onDragOver={(e) => e.preventDefault()}
+                                draggable={!isMobile}
+                                onDragStart={(e) => !isMobile && dragStart(e, index)}
+                                onDragEnter={(e) => !isMobile && dragEnter(e, index)}
+                                onDragEnd={!isMobile ? drop : undefined}
+                                onTouchStart={(e) => isMobile && handleTouchStart(e, index)}
+                                onTouchMove={(e) => isMobile && handleTouchMove(e)}
+                                onTouchEnd={() => isMobile && handleTouchEnd()}
                                 sx={{
                                     p: 1,
                                     mb: 1,
