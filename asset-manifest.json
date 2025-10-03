@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.js": "/room-escape-planner/static/js/main.8c7f5ab2.js",
+    "static/media/themeList.csv": "/room-escape-planner/static/media/themeList.38f336a80c9182e736d5.csv",
+    "index.html": "/room-escape-planner/index.html",
+    "main.8c7f5ab2.js.map": "/room-escape-planner/static/js/main.8c7f5ab2.js.map"
+  },
+  "entrypoints": [
+    "static/js/main.8c7f5ab2.js"
+  ]
+}
